@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:english_words/english_words.dart';
 
@@ -10,7 +12,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Startup Name Generator',
+      title: 'Know Your Tax',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -21,7 +23,7 @@ class MyApp extends StatelessWidget {
         // or simply save your changes to "hot reload" in a Flutter IDE).
         // Notice that the counter didn't reset back to zero; the application
         // is not restarted.
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.green,
         // This makes the visual density adapt to the platform that you run
         // the app on. For desktop platforms, the controls will be smaller and
         // closer together (more dense) than on mobile platforms.
@@ -123,22 +125,68 @@ class RandomWords extends StatefulWidget {
   RandomWordsState createState() => RandomWordsState();
 }
 
+
 class RandomWordsState extends State<RandomWords> {
 
   final _suggestions = <WordPair>[];
   final Set<WordPair> _saved = Set<WordPair>();
   final _biggerFont = const TextStyle(fontSize: 18.0);
 
+  final incomeController = TextEditingController(text: '5000');
+
+  double income = 5000.0;
+  String taxText = "000";
+
+  @override
+  void initState() {
+    super.initState();
+
+    incomeController.addListener(() {
+      print("income text controller: ${incomeController.text}");
+
+      final income = double.parse(incomeController.text);
+
+      final tax = (income - 5000) * 0.1;
+
+      print("tax is: ${tax.toString()}");
+      setState(() {
+        taxText = tax.toString();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    incomeController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Startup Name Generator'),
+        title: Text('Know Your Tax'),
         actions: <Widget>[
           IconButton(icon: Icon(Icons.list), onPressed: _pushSaved),
         ],
       ),
-      body: _buildSuggestions(),
+      body: _incomeInput(),
+    );
+  }
+
+  Widget _incomeInput() {
+    return Column(
+      children: <Widget>[
+        TextFormField(
+          decoration: InputDecoration(
+              labelText: 'Enter your income'
+          ),
+          keyboardType: TextInputType.number,
+          controller: incomeController,
+        ),
+        Text("Your tax is: "),
+        Text(taxText)
+      ],
     );
   }
 
