@@ -124,7 +124,7 @@ class TaxInputFormState extends State<TaxInputForm> {
       final monthlyTaxes = <double>[];
 
       for(int i in months) {
-        monthlyTaxes.add(calculateMonthTax(this.income, i));
+        monthlyTaxes.add(calculateMonthTax(income, i));
       }
 
       setState(() {
@@ -133,6 +133,8 @@ class TaxInputFormState extends State<TaxInputForm> {
 
       setState(() {
         this.taxes = monthlyTaxes;
+        print(monthlyTaxes);
+        print(this.taxes);
       });
     });
   }
@@ -144,12 +146,12 @@ class TaxInputFormState extends State<TaxInputForm> {
   }
 
   double calculateMonthTax(double monthlyIncome, int currentMonth) {
-    final totalIncome = (this.income - 5000-4500-2000) * currentMonth;
+    final totalIncome = (monthlyIncome - 5000 - 4500 - 2000) * currentMonth;
 
     double tax = this.calculateTax(totalIncome);
 
     if ( currentMonth > 1) {
-      final lastTotalIncome = (this.income - 5000 - 4500 - 2000) * (currentMonth - 1);
+      final lastTotalIncome = (monthlyIncome - 5000 - 4500 - 2000) * (currentMonth - 1);
 
       tax = tax - calculateTax(lastTotalIncome);
     }
