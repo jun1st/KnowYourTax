@@ -63,7 +63,7 @@ class TaxInputFormState extends State<TaxInputForm> {
   final double unemploymentRate = 0.005;
   final double minUnemploymentAmount = 4927;
   final double maxUnemploymentAmount = 24633;
-  final double houseAccumulationRate = 0.07;
+  final double houseAccumulationRate = 0.12;
   final double minHouseAccumulationAmount = 2415;
   final double maxHouseAccumulationAmount = 24629;
 
@@ -137,6 +137,8 @@ class TaxInputFormState extends State<TaxInputForm> {
       amount = minAmount;
     }
 
+    print("insurance amount: $amount");
+
     return amount * rate;
 
   }
@@ -186,19 +188,30 @@ class TaxInputFormState extends State<TaxInputForm> {
 
       double endowmentInsurance =
         calculateInsurance(minEndowmentAmount, maxEndowmentAmount, monthlyIncome, endowmentRate);
+      print("endowment insurance: $endowmentInsurance");
+
       double medicalInsurance =
         calculateInsurance(minMedicalAmount, maxMedicalAmount, monthlyIncome, medicalRate);
+      print("medical insurance: $medicalInsurance");
+
       double unemploymentInsurance =
         calculateInsurance(minUnemploymentAmount, maxUnemploymentAmount, monthlyIncome, unemploymentRate);
+      print("unemployment insurance: $unemploymentInsurance");
       double houseAccumulationInsurance =
         calculateInsurance(minHouseAccumulationAmount, maxHouseAccumulationAmount, monthlyIncome, houseAccumulationRate);
 
-      return endowmentInsurance + medicalInsurance + unemploymentInsurance + houseAccumulationInsurance;
+      print("house insurance: $houseAccumulationInsurance");
+      final totalInsurance = endowmentInsurance + medicalInsurance + unemploymentInsurance + houseAccumulationInsurance;
+
+      print("total insurance: $totalInsurance");
+      return totalInsurance;
 
   }
 
   double calculateMonthTax(double monthlyIncome, int currentMonth) {
     final totalIncome = (monthlyIncome - totalTaxExemption() - totalInsuranceAmount(monthlyIncome)) * currentMonth;
+
+    print("income taxed: $totalIncome");
 
     // tax need to be paid till now
     double tax = this.calculateIncomeTax(totalIncome);
