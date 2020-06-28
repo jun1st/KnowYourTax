@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
         // or simply save your changes to "hot reload" in a Flutter IDE).
         // Notice that the counter didn't reset back to zero; the application
         // is not restarted.
-        primarySwatch: Colors.green,
+        primarySwatch: Colors.blue,
         // This makes the visual density adapt to the platform that you run
         // the app on. For desktop platforms, the controls will be smaller and
         // closer together (more dense) than on mobile platforms.
@@ -153,6 +153,10 @@ class TaxInputFormState extends State<TaxInputForm> {
       final income = double.parse(incomeController.text);
 
       if (income <= 5000) {
+        setState(() {
+          this.taxes = [];
+        });
+
         return;
       }
 
@@ -162,14 +166,10 @@ class TaxInputFormState extends State<TaxInputForm> {
         monthlyTaxes.add(calculateMonthTax(income, i));
       }
 
-      setState(() {
-        this.taxes = [];
-      });
+
 
       setState(() {
         this.taxes = monthlyTaxes;
-        print(monthlyTaxes);
-        print(this.taxes);
       });
     });
   }
@@ -223,6 +223,8 @@ class TaxInputFormState extends State<TaxInputForm> {
       tax = tax - calculateIncomeTax(lastTotalIncome);
     }
 
+    tax = double.parse(tax.toStringAsFixed(2));
+
     return tax;
   }
 
@@ -232,7 +234,16 @@ class TaxInputFormState extends State<TaxInputForm> {
       appBar: AppBar(
         title: Text('Know Your Tax'),
         actions: <Widget>[
-          IconButton(icon: Icon(Icons.settings)),
+          IconButton(
+            icon: Icon(Icons.menu),
+            tooltip: "Settings",
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SettingView()),
+              );
+            },
+          ),
         ],
       ),
       body: _incomeInput(),
@@ -244,15 +255,17 @@ class TaxInputFormState extends State<TaxInputForm> {
   Widget _incomeInput() {
     return Column(
       children: <Widget>[
-        TextFormField(
-          decoration: InputDecoration(
-              labelText: 'Enter your income'
-          ),
-          keyboardType: TextInputType.number,
-          controller: incomeController,
+        Container(
+          padding: const EdgeInsets.all(18.0),
+          child: TextFormField(
+            decoration: InputDecoration(
+                labelText: 'Enter your income'
+            ),
+            keyboardType: TextInputType.number,
+            controller: incomeController,
+          )
         ),
-        Text("Your tax is: "),
-        Text(taxText),
+        Text("你每月应缴纳的个人所得税是"),
         new TaxResultList(items: this.taxes),
       ],
     );
@@ -284,7 +297,8 @@ class TaxResultListState extends State<TaxResultList> {
       flex: 1,
       child: ListView.builder(
         itemCount: widget.items.length,
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(8.0),
+
         itemBuilder: (context, i) {
           return buildRow(i, widget.items[i]);
         },
@@ -294,7 +308,43 @@ class TaxResultListState extends State<TaxResultList> {
 
   Widget buildRow(int i, double value) {
     return ListTile (
-        title: Text("${i + 1} 月份:  $value")
+        title: Column(
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                CircleAvatar(
+                  radius: 20.0,
+                  child: Text("${1+i} 月"),
+                ),
+                Container(
+                  margin: const EdgeInsets.only(left: 30.0),
+                  child: Text(value.toString(), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0)),
+                ),
+              ]
+            ),
+            Divider(color: Colors.blue)
+          ],
+        )
+    );
+  }
+}
+
+class SettingView extends StatelessWidget {
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Settings")
+      ),
+      body: Center(
+        child: RaisedButton(
+          onPressed: (){
+            Navigator.pop(context);
+          },
+          child: Text('Go back'),
+        )
+      )
     );
   }
 }
