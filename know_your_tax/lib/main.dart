@@ -335,16 +335,61 @@ class SettingView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Settings")
+        title: Text("Settings"),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.done),
+            tooltip: "Done",
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ],
       ),
-      body: Center(
-        child: RaisedButton(
-          onPressed: (){
-            Navigator.pop(context);
-          },
-          child: Text('Go back'),
-        )
+      body: Container(
+        margin: EdgeInsets.all(12.0),
+        child: ListView(
+          children: <Widget>[
+            this._buildInputField(8, "社保缴纳基数"),
+
+            this._buildInputField(7, "公积金缴纳基数"),
+            this._buildInputField(6, "医保缴纳基数"),
+            this._buildInputField(0, "补充公积金缴纳基数"),
+          ],
+        ),
       )
+
+//      Center(
+//        child: RaisedButton(
+//          onPressed: (){
+//            Navigator.pop(context);
+//          },
+//          child: Text('Go back'),
+//        )
+//      )
+    );
+  }
+
+  Widget _buildInputField(int defaultValue, String name) {
+    return Row(
+      children: <Widget>[
+        Expanded(
+          flex: 2,
+          child: TextField(
+            decoration: InputDecoration(hintText: name),
+            keyboardType: TextInputType.number,
+          ),
+        ),
+        Expanded(
+          flex: 1,
+          child: TextField(
+            decoration: InputDecoration(hintText: "比例"),
+            textAlign: TextAlign.center,
+            keyboardType: TextInputType.numberWithOptions(),
+          ),
+        ),
+        Text("%")
+      ],
     );
   }
 }
