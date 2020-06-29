@@ -39,6 +39,13 @@ class TaxInputForm extends StatefulWidget {
   TaxInputFormState createState() => TaxInputFormState();
 }
 
+class InsuranceAndTaxRate {
+  double endowmentRate = 0.08;
+  double medicalRate = 0.02;
+  double unemploymentRate = 0.005;
+  double houseAccumulationRate = 0.07;
+  double extraHouseAccumulationRate = 0.02;
+}
 
 class TaxInputFormState extends State<TaxInputForm> {
 
