@@ -40,68 +40,32 @@ class TaxInputForm extends StatefulWidget {
 }
 
 class InsuranceAndTaxRate {
+
+  // monthly tax exemption amount
+  double taxExemption = 5000.0;
+
   double endowmentRate = 0.08;
   double medicalRate = 0.02;
   double unemploymentRate = 0.005;
   double houseAccumulationRate = 0.07;
-  double extraHouseAccumulationRate = 0.02;
-}
+  double extraHouseAccumulationRate = 0.05;
 
-class TaxInputFormState extends State<TaxInputForm> {
-
-  final months = <int>[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-  var taxes = <double>[];
-
-  final incomeController = TextEditingController(text: '30000');
-
-  double income = 30000.0;
-  String taxText = "0.0";
-  double taxExemption = 5000.0;
   final subsidyForOld = 2000;
   final subsidyForEachChild = 1000;
-  int childNumber = 0;
 
-  final double endowmentRate = 0.08;
-  final double minEndowmentAmount = 4927;
-  final double maxEndowmentAmount = 24633;
-  final double medicalRate = 0.02;
-  final double minMedicalAmount = 4927;
-  final double maxMedicalAmount = 24633;
-  final double unemploymentRate = 0.005;
-  final double minUnemploymentAmount = 4927;
-  final double maxUnemploymentAmount = 24633;
-  final double houseAccumulationRate = 0.12;
-  final double minHouseAccumulationAmount = 2415;
-  final double maxHouseAccumulationAmount = 24629;
+  int test = 20;
 
+  double minEndowmentAmount = 4927;
+  double maxEndowmentAmount = 24633;
+  double minMedicalAmount = 4927;
+  double maxMedicalAmount = 24633;
+  double minUnemploymentAmount = 4927;
+  double maxUnemploymentAmount = 24633;
+  double minHouseAccumulationAmount = 2415;
+  double maxHouseAccumulationAmount = 24629;
 
-  double taxRate(double incomeTillMonth) {
-
-    if (incomeTillMonth <= 36000) {
-      return 0.03;
-    }
-
-    if (incomeTillMonth <= 144000) {
-      return 0.1;
-    }
-
-    if (incomeTillMonth <= 300000) {
-      return 0.2;
-    }
-
-    if (incomeTillMonth <= 420000) {
-      return 0.24;
-    }
-
-    if ( incomeTillMonth <= 660000) {
-      return 0.3;
-    }
-
-    if (incomeTillMonth <= 960000) {
-      return 0.35;
-    }
-
-    return 0.45;
+  double totalTaxExemption(int childNumber) {
+    return taxExemption + subsidyForOld + subsidyForEachChild * childNumber;
   }
 
   double calculateIncomeTax(double totalIncome) {
@@ -150,6 +114,99 @@ class TaxInputFormState extends State<TaxInputForm> {
 
   }
 
+  double totalInsuranceAmount(double monthlyIncome) {
+
+    double endowmentInsurance =
+      calculateInsurance(minEndowmentAmount, maxEndowmentAmount, monthlyIncome, endowmentRate);
+    print("endowment insurance: $endowmentInsurance");
+
+    double medicalInsurance =
+      calculateInsurance(minMedicalAmount, maxMedicalAmount, monthlyIncome, medicalRate);
+    print("medical insurance: $medicalInsurance");
+
+    double unemploymentInsurance =
+      calculateInsurance(minUnemploymentAmount, maxUnemploymentAmount, monthlyIncome, unemploymentRate);
+    print("unemployment insurance: $unemploymentInsurance");
+    double houseAccumulationInsurance =
+      calculateInsurance(minHouseAccumulationAmount, maxHouseAccumulationAmount, monthlyIncome, houseAccumulationRate) + 
+          calculateInsurance(minHouseAccumulationAmount, maxHouseAccumulationAmount, monthlyIncome, extraHouseAccumulationRate);
+
+    print("house insurance: $houseAccumulationInsurance");
+    final totalInsurance = endowmentInsurance + medicalInsurance + unemploymentInsurance + houseAccumulationInsurance;
+
+    print("total insurance: $totalInsurance");
+    return totalInsurance;
+
+  }
+
+  double calculateMonthTax(double monthlyIncome, int currentMonth, int childNumber) {
+    final totalIncome = (monthlyIncome - totalTaxExemption(childNumber)- totalInsuranceAmount(monthlyIncome)) * currentMonth;
+
+    print("income taxed: $totalIncome");
+
+    // tax need to be paid till now
+    double tax = this.calculateIncomeTax(totalIncome);
+
+    if ( currentMonth > 1) {
+      final lastTotalIncome = (monthlyIncome - totalTaxExemption(childNumber) - totalInsuranceAmount(monthlyIncome)) * (currentMonth - 1);
+
+      // subtract tax paid till last month
+      tax = tax - calculateIncomeTax(lastTotalIncome);
+    }
+
+    tax = double.parse(tax.toStringAsFixed(2));
+
+    return tax;
+  }
+}
+
+class TaxInputFormState extends State<TaxInputForm> {
+
+  final months = <int>[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  var taxes = <double>[];
+
+  final incomeController = TextEditingController(text: '30000');
+
+  double income = 30000.0;
+  String taxText = "0.0";
+  int childNumber = 0;
+
+  final insuranceAndTaxRate = InsuranceAndTaxRate();
+
+
+  double taxRate(double incomeTillMonth) {
+
+    if (incomeTillMonth <= 36000) {
+      return 0.03;
+    }
+
+    if (incomeTillMonth <= 144000) {
+      return 0.1;
+    }
+
+    if (incomeTillMonth <= 300000) {
+      return 0.2;
+    }
+
+    if (incomeTillMonth <= 420000) {
+      return 0.24;
+    }
+
+    if ( incomeTillMonth <= 660000) {
+      return 0.3;
+    }
+
+    if (incomeTillMonth <= 960000) {
+      return 0.35;
+    }
+
+    return 0.45;
+  }
+
+
+
+
+
   @override
   void initState() {
     super.initState();
@@ -170,10 +227,8 @@ class TaxInputFormState extends State<TaxInputForm> {
       final monthlyTaxes = <double>[];
 
       for(int i in months) {
-        monthlyTaxes.add(calculateMonthTax(income, i));
+        monthlyTaxes.add(insuranceAndTaxRate.calculateMonthTax(income, i, childNumber));
       }
-
-
 
       setState(() {
         this.taxes = monthlyTaxes;
@@ -187,53 +242,8 @@ class TaxInputFormState extends State<TaxInputForm> {
     super.dispose();
   }
 
-  double totalTaxExemption() {
-    return taxExemption + subsidyForOld + subsidyForEachChild * childNumber;
-  }
 
-  double totalInsuranceAmount(double monthlyIncome) {
 
-      double endowmentInsurance =
-        calculateInsurance(minEndowmentAmount, maxEndowmentAmount, monthlyIncome, endowmentRate);
-      print("endowment insurance: $endowmentInsurance");
-
-      double medicalInsurance =
-        calculateInsurance(minMedicalAmount, maxMedicalAmount, monthlyIncome, medicalRate);
-      print("medical insurance: $medicalInsurance");
-
-      double unemploymentInsurance =
-        calculateInsurance(minUnemploymentAmount, maxUnemploymentAmount, monthlyIncome, unemploymentRate);
-      print("unemployment insurance: $unemploymentInsurance");
-      double houseAccumulationInsurance =
-        calculateInsurance(minHouseAccumulationAmount, maxHouseAccumulationAmount, monthlyIncome, houseAccumulationRate);
-
-      print("house insurance: $houseAccumulationInsurance");
-      final totalInsurance = endowmentInsurance + medicalInsurance + unemploymentInsurance + houseAccumulationInsurance;
-
-      print("total insurance: $totalInsurance");
-      return totalInsurance;
-
-  }
-
-  double calculateMonthTax(double monthlyIncome, int currentMonth) {
-    final totalIncome = (monthlyIncome - totalTaxExemption() - totalInsuranceAmount(monthlyIncome)) * currentMonth;
-
-    print("income taxed: $totalIncome");
-
-    // tax need to be paid till now
-    double tax = this.calculateIncomeTax(totalIncome);
-
-    if ( currentMonth > 1) {
-      final lastTotalIncome = (monthlyIncome - totalTaxExemption() - totalInsuranceAmount(monthlyIncome)) * (currentMonth - 1);
-
-      // subtract tax paid till last month
-      tax = tax - calculateIncomeTax(lastTotalIncome);
-    }
-
-    tax = double.parse(tax.toStringAsFixed(2));
-
-    return tax;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -247,7 +257,7 @@ class TaxInputFormState extends State<TaxInputForm> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => SettingView()),
+                MaterialPageRoute(builder: (context) => SettingView(insuranceAndTaxRate: this.insuranceAndTaxRate)),
               );
             },
           ),
@@ -338,6 +348,10 @@ class TaxResultListState extends State<TaxResultList> {
 
 class SettingView extends StatelessWidget {
 
+  final InsuranceAndTaxRate insuranceAndTaxRate;
+
+  SettingView({Key key, @required this.insuranceAndTaxRate}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -348,7 +362,7 @@ class SettingView extends StatelessWidget {
             icon: Icon(Icons.done),
             tooltip: "Done",
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(context, this.insuranceAndTaxRate);
             },
           ),
         ],
@@ -361,19 +375,11 @@ class SettingView extends StatelessWidget {
 
             this._buildInputField(7, "公积金缴纳基数"),
             this._buildInputField(6, "医保缴纳基数"),
-            this._buildInputField(0, "补充公积金缴纳基数"),
+            this._buildInputField(this.insuranceAndTaxRate.test, "补充公积金缴纳基数"),
           ],
         ),
       )
 
-//      Center(
-//        child: RaisedButton(
-//          onPressed: (){
-//            Navigator.pop(context);
-//          },
-//          child: Text('Go back'),
-//        )
-//      )
     );
   }
 
@@ -390,7 +396,7 @@ class SettingView extends StatelessWidget {
         Expanded(
           flex: 1,
           child: TextField(
-            decoration: InputDecoration(hintText: "比例"),
+            decoration: InputDecoration(hintText: defaultValue.toString()),
             textAlign: TextAlign.center,
             keyboardType: TextInputType.numberWithOptions(),
           ),
