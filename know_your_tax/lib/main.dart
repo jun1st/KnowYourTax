@@ -253,7 +253,14 @@ class TaxInputFormState extends State<TaxInputForm> {
           ),
         ],
       ),
-      body: _incomeInput(),
+      body: new Container(
+        child: new GestureDetector(
+          onTap: () {
+            FocusScope.of(context).requestFocus(new FocusNode());
+          },
+          child: _incomeInput(),
+        )
+      )
     );
   }
 
