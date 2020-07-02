@@ -44,11 +44,11 @@ class InsuranceAndTaxRate {
   // monthly tax exemption amount
   double taxExemption = 5000.0;
 
-  double endowmentRate = 0.08;
-  double medicalRate = 0.02;
-  double unemploymentRate = 0.005;
-  double houseAccumulationRate = 0.07;
-  double extraHouseAccumulationRate = 0.05;
+  double endowmentRate = 8;
+  double medicalRate = 2;
+  double unemploymentRate = 5;
+  double houseAccumulationRate = 7;
+  double extraHouseAccumulationRate = 5;
 
   final subsidyForOld = 2000;
   final subsidyForEachChild = 1000;
@@ -110,7 +110,7 @@ class InsuranceAndTaxRate {
 
     print("insurance amount: $amount");
 
-    return amount * rate;
+    return amount * rate / 100;
 
   }
 
@@ -171,8 +171,7 @@ class TaxInputFormState extends State<TaxInputForm> {
   String taxText = "0.0";
   int childNumber = 0;
 
-  final insuranceAndTaxRate = InsuranceAndTaxRate();
-
+  var insuranceAndTaxRate = InsuranceAndTaxRate();
 
   double taxRate(double incomeTillMonth) {
 
@@ -203,36 +202,32 @@ class TaxInputFormState extends State<TaxInputForm> {
     return 0.45;
   }
 
-
-
-
-
   @override
   void initState() {
     super.initState();
 
+    populateTaxes();
+
     incomeController.addListener(() {
       print("income text controller: ${incomeController.text}");
 
-      final income = double.parse(incomeController.text);
+      populateTaxes();
+    });
+  }
 
-      if (income <= 5000) {
-        setState(() {
-          this.taxes = [];
-        });
+  void populateTaxes() {
+    final income = double.parse(incomeController.text);
 
-        return;
-      }
+    final monthlyTaxes = <double>[];
 
-      final monthlyTaxes = <double>[];
-
+    if (income > 5000) {
       for(int i in months) {
         monthlyTaxes.add(insuranceAndTaxRate.calculateMonthTax(income, i, childNumber));
       }
+    }
 
-      setState(() {
-        this.taxes = monthlyTaxes;
-      });
+    setState(() {
+      this.taxes = monthlyTaxes;
     });
   }
 
@@ -254,12 +249,7 @@ class TaxInputFormState extends State<TaxInputForm> {
           IconButton(
             icon: Icon(Icons.menu),
             tooltip: "Settings",
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => SettingView(insuranceAndTaxRate: this.insuranceAndTaxRate)),
-              );
-            },
+            onPressed: navigateToSettingView,
           ),
         ],
       ),
@@ -267,6 +257,18 @@ class TaxInputFormState extends State<TaxInputForm> {
     );
   }
 
+
+  void navigateToSettingView() async {
+    var insuranceAndTax =
+      await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => SettingView(insuranceAndTaxRate: this.insuranceAndTaxRate)),
+      );
+
+    this.insuranceAndTaxRate = insuranceAndTax;
+
+    populateTaxes();
+  }
 
 
   Widget _incomeInput() {
@@ -352,8 +354,41 @@ class SettingView extends StatelessWidget {
 
   SettingView({Key key, @required this.insuranceAndTaxRate}) : super(key: key);
 
+  final endowmentRateController = TextEditingController();
+  final houseAccumulationRateController = TextEditingController();
+  final medicalRateController = TextEditingController();
+  final extraHouseAccumulationRateController = TextEditingController();
+
+
+  _endowmentRateChanged() {
+    print(endowmentRateController.text);
+
+    this.insuranceAndTaxRate.endowmentRate = double.parse(endowmentRateController.text);
+  }
+
+  _houseAccumulationRateChanged() {
+    print(houseAccumulationRateController.text);
+    this.insuranceAndTaxRate.houseAccumulationRate = double.parse(houseAccumulationRateController.text);
+  }
+
+  _medicalRateChanged() {
+    print(medicalRateController.text);
+    this.insuranceAndTaxRate.medicalRate = double.parse(medicalRateController.text);
+  }
+
+  _extraHouseAccumulationRateChanged() {
+    print(extraHouseAccumulationRateController.text);
+    this.insuranceAndTaxRate.extraHouseAccumulationRate = double.parse(extraHouseAccumulationRateController.text);
+  }
+
   @override
   Widget build(BuildContext context) {
+    
+    endowmentRateController.addListener(this._endowmentRateChanged);
+    houseAccumulationRateController.addListener(_houseAccumulationRateChanged);
+    medicalRateController.addListener(_medicalRateChanged);
+    extraHouseAccumulationRateController.addListener(_extraHouseAccumulationRateChanged);
+
     return Scaffold(
       appBar: AppBar(
         title: Text("Settings"),
@@ -371,11 +406,10 @@ class SettingView extends StatelessWidget {
         margin: EdgeInsets.all(12.0),
         child: ListView(
           children: <Widget>[
-            this._buildInputField(8, "社保缴纳基数"),
-
-            this._buildInputField(7, "公积金缴纳基数"),
-            this._buildInputField(6, "医保缴纳基数"),
-            this._buildInputField(this.insuranceAndTaxRate.test, "补充公积金缴纳基数"),
+            this._buildInputField(insuranceAndTaxRate.endowmentRate, "社保缴纳基数", endowmentRateController),
+            this._buildInputField(insuranceAndTaxRate.houseAccumulationRate, "公积金缴纳基数", houseAccumulationRateController),
+            this._buildInputField(insuranceAndTaxRate.medicalRate, "医保缴纳基数", medicalRateController),
+            this._buildInputField(insuranceAndTaxRate.extraHouseAccumulationRate, "补充公积金缴纳基数", extraHouseAccumulationRateController),
           ],
         ),
       )
@@ -383,7 +417,7 @@ class SettingView extends StatelessWidget {
     );
   }
 
-  Widget _buildInputField(int defaultValue, String name) {
+  Widget _buildInputField(double defaultValue, String name, TextEditingController editingController) {
     return Row(
       children: <Widget>[
         Expanded(
@@ -399,6 +433,7 @@ class SettingView extends StatelessWidget {
             decoration: InputDecoration(hintText: defaultValue.toString()),
             textAlign: TextAlign.center,
             keyboardType: TextInputType.numberWithOptions(),
+            controller: editingController,
           ),
         ),
         Text("%")
