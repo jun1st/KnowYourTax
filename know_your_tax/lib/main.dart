@@ -39,16 +39,27 @@ class TaxInputForm extends StatefulWidget {
   TaxInputFormState createState() => TaxInputFormState();
 }
 
+class InsuranceAndTax {
+  String name;
+  int rate = 0;
+  int minAmount = 0;
+  int maxAmount = 0;
+
+  int actualAmount = 0;
+
+  InsuranceAndTax({@required this.name, @required this.rate, @required this.minAmount, @required this.maxAmount})
+}
+
 class InsuranceAndTaxRate {
 
   // monthly tax exemption amount
   double taxExemption = 5000.0;
 
-  double endowmentRate = 8;
-  double medicalRate = 2;
-  double unemploymentRate = 5;
-  double houseAccumulationRate = 7;
-  double extraHouseAccumulationRate = 5;
+  int endowmentRate = 8;
+  int medicalRate = 2;
+  int unemploymentRate = 5;
+  int houseAccumulationRate = 7;
+  int extraHouseAccumulationRate = 5;
 
   final subsidyForOld = 2000;
   final subsidyForEachChild = 1000;
@@ -96,7 +107,7 @@ class InsuranceAndTaxRate {
     return (totalIncome - 960000) * 0.45 + calculateIncomeTax(960000);
   }
 
-  double calculateInsurance(double minAmount, double maxAmount, double income, double rate) {
+  double calculateInsurance(double minAmount, double maxAmount, double income, int rate) {
 
     double amount = maxAmount;
 
@@ -370,22 +381,22 @@ class SettingView extends StatelessWidget {
   _endowmentRateChanged() {
     print(endowmentRateController.text);
 
-    this.insuranceAndTaxRate.endowmentRate = double.parse(endowmentRateController.text);
+    this.insuranceAndTaxRate.endowmentRate = int.parse(endowmentRateController.text);
   }
 
   _houseAccumulationRateChanged() {
     print(houseAccumulationRateController.text);
-    this.insuranceAndTaxRate.houseAccumulationRate = double.parse(houseAccumulationRateController.text);
+    this.insuranceAndTaxRate.houseAccumulationRate = int.parse(houseAccumulationRateController.text);
   }
 
   _medicalRateChanged() {
     print(medicalRateController.text);
-    this.insuranceAndTaxRate.medicalRate = double.parse(medicalRateController.text);
+    this.insuranceAndTaxRate.medicalRate = int.parse(medicalRateController.text);
   }
 
   _extraHouseAccumulationRateChanged() {
     print(extraHouseAccumulationRateController.text);
-    this.insuranceAndTaxRate.extraHouseAccumulationRate = double.parse(extraHouseAccumulationRateController.text);
+    this.insuranceAndTaxRate.extraHouseAccumulationRate = int.parse(extraHouseAccumulationRateController.text);
   }
 
   @override
@@ -413,10 +424,10 @@ class SettingView extends StatelessWidget {
         margin: EdgeInsets.all(12.0),
         child: ListView(
           children: <Widget>[
-            this._buildInputField(insuranceAndTaxRate.endowmentRate, "社保缴纳基数", endowmentRateController),
-            this._buildInputField(insuranceAndTaxRate.houseAccumulationRate, "公积金缴纳基数", houseAccumulationRateController),
-            this._buildInputField(insuranceAndTaxRate.medicalRate, "医保缴纳基数", medicalRateController),
-            this._buildInputField(insuranceAndTaxRate.extraHouseAccumulationRate, "补充公积金缴纳基数", extraHouseAccumulationRateController),
+            this._buildInputField("社保", insuranceAndTaxRate.endowmentRate, insuranceAndTaxRate.minEndowmentAmount, insuranceAndTaxRate.maxEndowmentAmount, endowmentRateController),
+            this._buildInputField("公积金", insuranceAndTaxRate.houseAccumulationRate, insuranceAndTaxRate.minHouseAccumulationAmount, insuranceAndTaxRate.maxHouseAccumulationAmount, houseAccumulationRateController),
+            this._buildInputField("医保", insuranceAndTaxRate.medicalRate, insuranceAndTaxRate.minMedicalAmount, insuranceAndTaxRate.maxMedicalAmount, medicalRateController),
+            this._buildInputField("补充公积金", insuranceAndTaxRate.extraHouseAccumulationRate, insuranceAndTaxRate.minHouseAccumulationAmount, insuranceAndTaxRate.maxHouseAccumulationAmount, extraHouseAccumulationRateController),
           ],
         ),
       )
@@ -424,26 +435,44 @@ class SettingView extends StatelessWidget {
     );
   }
 
-  Widget _buildInputField(double defaultValue, String name, TextEditingController editingController) {
-    return Row(
+  Widget _buildInputField(String name,  int defaultRate, double minAmount, double maxAmount, TextEditingController editingController) {
+    return Column(
       children: <Widget>[
-        Expanded(
-          flex: 2,
-          child: TextField(
-            decoration: InputDecoration(hintText: name),
-            keyboardType: TextInputType.number,
-          ),
+        Text(name),
+        Row(
+          children: <Widget>[
+            Expanded(
+              flex: 1,
+              child: Text("缴纳基数")
+            ),
+            Expanded(
+              flex: 3,
+              child: Slider(min: minAmount, max: maxAmount, value: 10000, label: "基数", activeColor: Colors.blue)
+            ),
+          ],
         ),
-        Expanded(
-          flex: 1,
-          child: TextField(
-            decoration: InputDecoration(hintText: defaultValue.toString()),
-            textAlign: TextAlign.center,
-            keyboardType: TextInputType.numberWithOptions(),
-            controller: editingController,
-          ),
+        Row(
+          children: <Widget>[
+            Expanded(
+              flex: 1,
+              child: Text("缴纳比例")
+            ),
+            Expanded(
+              flex: 3,
+              child: TextField(
+                decoration: InputDecoration(hintText: defaultRate.toString()),
+                textAlign: TextAlign.center,
+                keyboardType: TextInputType.numberWithOptions(),
+                controller: editingController,
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: Text("%")
+            )
+
+          ],
         ),
-        Text("%")
       ],
     );
   }
